@@ -1,0 +1,102 @@
+#
+# RCGA 設定ファイル(YAML)
+#
+# 本プログラムは 線形識別器の重みをGAにより調整する
+#
+
+
+# ログレベル設定
+log:
+  level: "INFO"
+
+# 入力情報
+input:
+  # パラメータ数
+  parameter_num: 10
+
+  # カテゴリ(正解ラベル)
+  labels: ["A", "B"]
+
+# パラメータ探索設定
+#   各パラメータの探索範囲を配列形式で記載する
+#   配列の要素数は input/parameter_num と整合性がとれている必要あり〼。
+#   パラメータを固定したい場合は[-1,-1]のように同じ数値にすることで
+#   探索パラメータ値を固定できる
+#   
+#   これは、線形識別器書く重みの最小値と最大値となる(以下の例では2種のパラメータ)
+#
+#   y = a1 * x1 + a2 * x2  + bias
+#
+parameter_ranges:
+  - [-1000, 1000]
+  - [-1000, 1000]
+
+
+# バイアス項の探索範囲
+# rangeって書いてあるから1個しか記述したらあかんで
+# 若干この設定値が識別関数依存なので気持ち悪いけど...
+bias_range: [-1000, 1000]
+
+# 遺伝的アルゴリズム設定
+ga:
+  # 最大世代数
+  max_generation: 1000
+  # 母集団初期化設定
+  initialization:
+    # 母集団数(最初に作成する個体数を定義します)
+    population_num: 500
+
+  # 評価設定
+  evaluation:
+    # 最適化する評価値
+    # - precision
+    # - recall
+    # - f_mesure
+    opt_metric: "f_mesure"
+    # 収束判定時に平均操作に入れる個体数
+    average_num: 50
+    
+    # 収束精度
+    tolerance: 1.0E-4
+
+  # 選択設定
+  selection:
+    # 親の個体数を設定する
+    parent_num: 250
+
+    # stragegey
+    #  - elite    (エリート戦略)
+    #  - roulette (ルーレット戦略)
+    #  - hybrid   (エリート+ルーレット戦略)
+    strategy: "elite"
+
+    # 選択戦略がハイブリッド法の場合にどの程度
+    # エリート戦略で選択するのかの(率)
+    elite_ratio: 0.5
+
+  # 交配設定
+  crossover:
+    # 交配のセット数を規定する
+    crossover_pairs: 2500
+
+    # 交配確率
+    prob: 0.8
+
+    # 交配手法設定
+    # - BLX-alpha (BLX-alpha交配)
+    # - SPX       (シンプレックス交配)
+    type: "SPX"
+    # シンプレックス交配の時に利用するパラメータ
+    alpha: 0.3
+
+  # 突然変異設定
+  mutation:
+    # 突然変異確率設定(確率)
+    prob: 0.01
+
+    # 変異種別設定
+    # 
+    # - uniform  (一様突然変異)
+    # - boundary (境界突然変異)
+    # 
+    type: "uniform"
