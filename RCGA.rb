@@ -281,18 +281,18 @@ class RealCodedGeneticAlgorithm
         precision_hash = calc_precision(params)
         score = 0.0
         precision_hash.each do |label,ary|
-          score += ary[0].to_f / ary[1].to_f
+          score += ary[1].to_f > 0 ? ary[0].to_f / ary[1].to_f : 0.0
         end
-        score = score / precision_hash.size.to_f
+        score = precision_hash.size > 0 ? score / precision_hash.size.to_f : 0.0
 
       # 再現率(平均)
       when "recall" then
         recall_hash = calc_recall(params)
         score = 0.0
         recall_hash.each do |label,ary|
-          score += ary[0].to_f / ary[1].to_f
+          score += ary[1].to_f > 0 ? ary[0].to_f / ary[1].to_f : 0.0
         end
-        score = score / recall_hash.size.to_f
+        score = recall_hash.size > 0 ? score / recall_hash.size.to_f : 0.0
 
       # F値(平均)
       when "f_mesure" then
@@ -307,8 +307,15 @@ class RealCodedGeneticAlgorithm
       # [ スコア, [c1,c2,c3,..,cN] ]
       tmp.push([score, params])
     end
-    # 評価値毎に昇順にソートする破壊的操作
-    tmp.sort!{|a, b| -1*(a[0].to_f <=> b[0].to_f) }
+    # 評価値毎に降順にソートする破壊的操作
+    # NaN対策: NaNは最低スコアとして扱う
+    tmp.sort!{|a, b|
+      va = a[0].to_f
+      vb = b[0].to_f
+      va = -Float::INFINITY if va.nan?
+      vb = -Float::INFINITY if vb.nan?
+      vb <=> va
+    }
     # 最後に評価値でソートして設定された母集団数にする
     tmp.each_with_index do |ary, idx|
       score_populations.push(ary)
@@ -416,10 +423,18 @@ class RealCodedGeneticAlgorithm
     
     # ラベル毎にF値 を計算する
     @labels.each do |label|
+      if precision[label].nil? || recall[label].nil?
+        fmesure[label] = 0.0
+        next
+      end
       p = precision[label][0].to_f / precision[label][1].to_f
       r = recall[label][0].to_f / recall[label][1].to_f
-      f =  (2.0 * p * r) / ( p + r )
-      fmesure[label] = f
+      if (p + r) == 0.0
+        fmesure[label] = 0.0
+      else
+        f =  (2.0 * p * r) / ( p + r )
+        fmesure[label] = f
+      end
     end
     return fmesure
   end # calc_fmesure
@@ -453,7 +468,11 @@ class RealCodedGeneticAlgorithm
     pre_average_score = @max_accuracies[-1]
     
     # 差分を計算し、収束判定を実施する
-    tol = ((average_score - pre_average_score).abs / pre_average_score)
+    if pre_average_score == 0.0
+      tol = (average_score == 0.0) ? 0.0 : Float::INFINITY
+    else
+      tol = ((average_score - pre_average_score).abs / pre_average_score)
+    end
     
     # カレントスコアを最終行に追加
     @max_accuracies.push(average_score)

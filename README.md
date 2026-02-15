@@ -16,7 +16,7 @@ If `y > 0`, the sample is classified as label A; otherwise, label B.
 
 ## Requirements
 
-- Ruby
+- Ruby (or Docker)
 
 ## Usage
 
@@ -76,3 +76,32 @@ See `RCGA.yml` for a full example. Key settings include:
    - **Uniform**: Replace a gene with a random value within its range.
    - **Boundary**: Set a gene to either its upper or lower bound.
 6. **Convergence Check** — If the relative change in average fitness of the top individuals falls below the tolerance, stop. Otherwise, return to step 2.
+
+## Running with Docker
+
+Build the image:
+
+```bash
+docker build -t rcga .
+```
+
+Run with the included test data:
+
+```bash
+docker run --rm -v $(pwd)/output:/output rcga \
+  -c test_config.yml -i test_input.tsv -o /output/result.txt
+```
+
+Example output:
+
+```
+I, [...]  INFO -- : *** start RCGA ***
+I, [...]  INFO -- : first generation
+I, [...]  INFO -- : convergence!!
+I, [...]  INFO -- : max f_mesure: 1.0
+I, [...]  INFO -- : *** stop RCGA ***
+```
+
+## Test Data
+
+A sample configuration (`test_config.yml`) and input file (`test_input.tsv`) are included for quick testing. The test data contains 20 linearly separable samples (10 per class) with 3 features.
